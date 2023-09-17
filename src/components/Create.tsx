@@ -5,7 +5,7 @@ export default function Body() {
     <div className="Create">
       <h2 className="create-title">Create Hybrid Wallet</h2>
       <p className="create-subheading">
-        Before you can use Hybrid Wallet, you have to deploy it! 
+        You don't have a hybrid wallet yet - create one!
       </p>
       <Button className="create-wallet-button" size="medium" variant="outlined">Create Wallet</Button>
     </div>
