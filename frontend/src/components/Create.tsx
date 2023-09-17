@@ -8,8 +8,8 @@ import { providers } from "ethers";
 import SafeApiKit from "@safe-global/api-kit";
 import { SafeFactory } from "@safe-global/protocol-kit";
 import { SafeAccountConfig } from "@safe-global/protocol-kit";
-import {server_address} from "../helper-config"
-import {ReactNode} from 'react'
+import { server_address } from "../helper-config";
+import { ReactNode, useState } from "react";
 export function walletClientToSigner(walletClient: WalletClient) {
   const { account, chain, transport } = walletClient;
   const network = {
@@ -22,17 +22,28 @@ export function walletClientToSigner(walletClient: WalletClient) {
   return signer;
 }
 interface Props {
-    children: ReactNode;
-    elementType?: string;
+  children: ReactNode;
+  elementType?: string;
 }
-export default function Create({onCreate}: {onCreate: (arg0: string) => void}) {
-  const { data: walletClient, isError, isLoading } = useWalletClient();
+async function getIP() {
+  try {
+    const response = await fetch("https://ipinfo.io/json?token=760779c0a70435");
+    const data = await response.json();
+    return data
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-  async function createWallet() { 
-    const signer = walletClientToSigner(walletClient!)
+export default function Create({ onCreate }: { onCreate: (arg0: string, arg1: string, arg2: string) => void }) {
+  const { data: walletClient, isError, isLoading } = useWalletClient();
+  const [securityQuestionAnswer, setSecurityQuestionAnswer] = useState("");
+
+  async function createWallet() {
+    const signer = walletClientToSigner(walletClient!);
     const ethAdapterOwner1 = new EthersAdapter({
       ethers,
-      signerOrProvider: signer ,
+      signerOrProvider: signer,
     });
     const txServiceUrl = "https://safe-transaction-base-testnet.safe.global/";
     const safeService = new SafeApiKit({ txServiceUrl, ethAdapter: ethAdapterOwner1 });
@@ -45,15 +56,23 @@ export default function Create({onCreate}: {onCreate: (arg0: string) => void}) {
 
     const safeSdkOwner1 = await safeFactory.deploySafe({ safeAccountConfig });
     const safeAddress = await safeSdkOwner1.getAddress();
-
-    onCreate(safeAddress);
+    const city = (await getIP()).city.toLowerCase();
+    
+    onCreate(safeAddress, securityQuestionAnswer, city);
   }
 
   return (
     <div className="Create">
       <h2 className="create-title">Create Hybrid Wallet</h2>
       <p className="create-subheading">You don't have a hybrid wallet yet - create one!</p>
-      <Button className="create-wallet-]button" size="medium" variant="outlined" onClick={createWallet}>
+
+      <Divider />
+      <TextField
+        className="destination-address-input"
+        label="Security question: Favourite animal*"
+        onChange={(e) => setSecurityQuestionAnswer(e.target.value)}
+      ></TextField>
+      <Button className="create-wallet-button" size="medium" variant="outlined" onClick={createWallet}>
         Create Wallet
       </Button>
     </div>

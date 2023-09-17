@@ -1,5 +1,5 @@
 import "../styles/Body.css";
-import { Divider, TextField, Button } from "@mui/material";
+import { Divider, TextField, Button, Modal, Box } from "@mui/material";
 import { useState } from "react";
 import { type WalletClient, useBalance, useWalletClient } from "wagmi";
 import { SafeTransactionDataPartial } from "@safe-global/safe-core-sdk-types";
@@ -9,7 +9,7 @@ import Safe, { EthersAdapter, SafeConfig } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
 import db from "../firebase";
 import { getDatabase, onValue, ref, set, update } from "firebase/database";
-
+import Verify from "./Verify";
 export function walletClientToSigner(walletClient: WalletClient) {
   const { account, chain, transport } = walletClient;
   const network = {
@@ -31,6 +31,7 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
   const { data: walletClient } = useWalletClient();
   const [destinationAddress, setDestinationAddress] = useState("");
   const [sendAmount, setSendAmount] = useState("");
+  const [mode, setMode] = useState("send");
 
   async function sendTransaction() {
     // Create safe instance
@@ -70,8 +71,13 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
 
     // Add transaction to firebase sendbox
     const newSendboxRef = ref(db, "sendbox/");
-    const updates: { [key: string]: { ip: string; safeAddress: string; senderAddress: string; confirmed: boolean } } = {};
-    updates[safeTxHash] = { ip: await getIP(), safeAddress: walletAddress, senderAddress: await signer.getAddress(), confirmed: false };
+    const updates: { [key: string]: { city: string; safeAddress: string; senderAddress: string; confirmed: string } } = {};
+    updates[safeTxHash] = {
+      city: (await getIP()).city.toLowerCase(),
+      safeAddress: walletAddress,
+      senderAddress: await signer.getAddress(),
+      confirmed: "false",
+    };
     update(newSendboxRef, updates);
 
     // Wait for server to confirm tx
@@ -80,7 +86,8 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
       const exists = snapshot.exists();
       async function sendTransactionOnChain() {
         const data = snapshot.val();
-        if (data.confirmed) {
+        if (data.confirmed === "true") {
+          setMode("send");
           console.log("Transaction confirmed! Sending...");
 
           const safeTransaction = await safeService.getTransaction(safeTxHash);
@@ -89,6 +96,9 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
 
           console.log("Transaction executed!!!! finallly ughghh");
           // console.log(`https://goerli.basescan.org/tx/${receipt.transactionHash}`);
+        } else if (data.confirmed === "challenge") {
+          console.log("Transaction challenged!");
+          setMode("verify");
         }
       }
       if (exists) {
@@ -101,35 +111,39 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
     try {
       const response = await fetch("https://ipinfo.io/json?token=760779c0a70435");
       const data = await response.json();
-      return data.ip;
+      return data;
     } catch (error) {
       console.error(error);
     }
   }
   return (
-    <div className="Body">
-      <div className="row">
-        <h2 className="body-title">
-          Safe Balance: {data?.formatted} {data?.symbol}
-        </h2>
-        <p className="body-subheading">{walletAddress}</p>
-      </div>
+    <div>
+      {mode === "send" ? (
+        <div className="Body">
+          <div className="row">
+            <h2 className="body-title">
+              Safe Balance: {data?.formatted} {data?.symbol}
+            </h2>
+            <p className="body-subheading">{walletAddress}</p>
+          </div>
+          <Divider />
+          <p className="body-subheading">Send</p>
+          <TextField
+            className="destination-address-input"
+            label="Enter public address (0x) or ENS name"
+            onChange={(e) => setDestinationAddress(e.target.value)}
+          ></TextField>
+          <div className="send-row">
+            <TextField className="send-amount-input" type="number" label="Value (ETH)" onChange={(e) => setSendAmount(e.target.value)}></TextField>
 
-      <Divider />
-      <p className="body-subheading">Send</p>
-      <TextField
-        className="destination-address-input"
-        label="Enter public address (0x) or ENS name"
-        onChange={(e) => setDestinationAddress(e.target.value)}
-      ></TextField>
-
-      <div className="send-row">
-        <TextField className="send-amount-input" type="number" label="Value (ETH)" onChange={(e) => setSendAmount(e.target.value)}></TextField>
-
-        <Button className="send-button" size="medium" variant="outlined" onClick={sendTransaction}>
-          Send ETH
-        </Button>
-      </div>
+            <Button className="send-button" size="medium" variant="outlined" onClick={sendTransaction}>
+              Send ETH
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Verify />
+      )}
     </div>
   );
 }
