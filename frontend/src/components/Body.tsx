@@ -110,7 +110,7 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
     <div className="Body">
       <div className="row">
         <h2 className="body-title">
-          Smart Balance: {data?.formatted} {data?.symbol}
+          Safe Balance: {data?.formatted} {data?.symbol}
         </h2>
         <p className="body-subheading">{walletAddress}</p>
       </div>

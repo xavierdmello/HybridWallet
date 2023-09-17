@@ -21,6 +21,8 @@ function App() {
       const exists = snapshot.exists();
       if (exists) {
         setHybridWalletAddress(snapshot.val());
+      } else {
+        setHybridWalletAddress("");
       }
     });
   }, [isConnected, address]);

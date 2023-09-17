@@ -16,6 +16,7 @@ const ethAdapterServer = new EthersAdapter({
 const txServiceUrl = "https://safe-transaction-base-testnet.safe.global/";
 const safeService = new SafeApiKit({ txServiceUrl, ethAdapter: ethAdapterServer });
 
+console.log("Server started! Listening for new transactions...")
 async function main() {
   const newSendboxMessageRef = ref(db, "sendbox/");
   let initialDataLoaded = false;
@@ -25,6 +26,7 @@ async function main() {
   onChildAdded(newSendboxMessageRef, (snapshot) => {
     async function confirmTransaction() {
       if (initialDataLoaded == true) {
+        console.log("New transaction found!")
         const safeAddress = snapshot.val().safeAddress;
         const safeSdkServer = await Safe.create({
           ethAdapter: ethAdapterServer,
