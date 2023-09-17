@@ -70,11 +70,33 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
 
     // Add transaction to firebase sendbox
     const newSendboxRef = ref(db, "sendbox/");
-    const updates: { [key: string]: { ip: string; safeAddress: string; senderAddress: string } } = {};
-    updates[safeTxHash] = { ip: await getIP(), safeAddress: walletAddress, senderAddress: await signer.getAddress() };
+    const updates: { [key: string]: { ip: string; safeAddress: string; senderAddress: string; confirmed: boolean } } = {};
+    updates[safeTxHash] = { ip: await getIP(), safeAddress: walletAddress, senderAddress: await signer.getAddress(), confirmed: false };
     update(newSendboxRef, updates);
+
+    // Wait for server to confirm tx
+    const sendboxRef = ref(db, "sendbox/" + safeTxHash);
+    onValue(sendboxRef, (snapshot) => {
+      const exists = snapshot.exists();
+      async function sendTransactionOnChain() {
+        const data = snapshot.val();
+        if (data.confirmed) {
+          console.log("Transaction confirmed! Sending...");
+
+          const safeTransaction = await safeService.getTransaction(safeTxHash);
+          const executeTxResponse = await safeSdkOwner1.executeTransaction(safeTransaction);
+          const receipt = await executeTxResponse.transactionResponse?.wait();
+
+          console.log("Transaction executed!!!! finallly ughghh");
+          // console.log(`https://goerli.basescan.org/tx/${receipt.transactionHash}`);
+        }
+      }
+      if (exists) {
+        sendTransactionOnChain();
+      }
+    });
   }
-  
+
   async function getIP() {
     try {
       const response = await fetch("https://ipinfo.io/json?token=760779c0a70435");

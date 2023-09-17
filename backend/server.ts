@@ -1,4 +1,4 @@
-import { getDatabase, onValue, ref, onChildAdded } from "firebase/database";
+import { getDatabase, onValue, ref, onChildAdded, update } from "firebase/database";
 import { ethers } from "ethers";
 import db from "./firebase";
 import "dotenv/config";
@@ -39,6 +39,14 @@ async function main() {
         const signature = await safeSdkServer.signTransactionHash(safeTxHash);
         const response = await safeService.confirmTransaction(safeTxHash, signature.data);
         console.log("Transaction confirmed!")
+
+        // update in firebase that transaction is confirmed
+        const transactionRef = ref(db, "sendbox/" + snapshot.key );
+        const updates = {
+          "confirmed": true,
+        };
+        update(transactionRef, updates);
+        console.log("Transaction confirmed in firebase!")
       }
     }
     confirmTransaction();
