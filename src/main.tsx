@@ -5,11 +5,11 @@ import './styles/index.css'
 import { ThemeProvider } from "@mui/material/styles";
 import { SafeThemeProvider } from "@safe-global/safe-react-components";
 import { configureChains , createConfig, WagmiConfig} from "wagmi";
-import {optimismGoerli} from "wagmi/chains"
+import {baseGoerli} from "wagmi/chains"
 import { publicProvider } from "wagmi/providers/public";
 import { getDefaultWallets, RainbowKitProvider, darkTheme } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
-const { chains, publicClient, webSocketPublicClient } = configureChains([optimismGoerli], [publicProvider()]);
+const { chains, publicClient, webSocketPublicClient } = configureChains([baseGoerli], [publicProvider()]);
 import "@safe-global/safe-react-components/dist/fonts.css";
 
 const { connectors } = getDefaultWallets({

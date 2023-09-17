@@ -1,0 +1,1 @@
+export const server_address = "0x7ac669c37ea4e716e0efd3043581be14156414c4";
