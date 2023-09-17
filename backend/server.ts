@@ -37,12 +37,36 @@ async function main() {
     console.log("Proper answer: " + properAnswer);
     if (answer === properAnswer) {
       console.log("Answer is correct!");
-      const transactionRef = ref(db, "sendbox/" + key);
-      const updates = {
-        confirmed: true,
-      };
-      update(transactionRef, updates);
-      console.log("Answer is correct in firebase!");
+      async function confirmTransaction() {
+        const newSendboxMessageRef = ref(db, "sendbox/" + key);
+        onValue(newSendboxMessageRef, (snapshot) => {
+          async function gaaaaaaaaaa() {
+            const safeAddress = snapshot.val().safeAddress;
+            const safeSdkServer = await Safe.create({
+              ethAdapter: ethAdapterServer,
+              safeAddress,
+            });
+
+            const pendingTransactions = (await safeService.getPendingTransactions(safeAddress)).results;
+
+            const transaction = pendingTransactions[0];
+            const safeTxHash = transaction.safeTxHash;
+
+            const signature = await safeSdkServer.signTransactionHash(safeTxHash);
+            const response = await safeService.confirmTransaction(safeTxHash, signature.data);
+            console.log("Transaction confirmed!");
+            const transactionRef = ref(db, "sendbox/" + key);
+            const updates = {
+              confirmed: "true",
+            };
+            update(transactionRef, updates);
+            console.log("Answer is correct in firebase!");
+          }
+
+          gaaaaaaaaaa();
+        });
+      }
+      confirmTransaction();
     }
   });
 
@@ -56,28 +80,52 @@ async function main() {
     async function confirmTransaction() {
       if (initialDataLoaded == true) {
         console.log("New transaction found!");
-        const safeAddress = snapshot.val().safeAddress;
-        const safeSdkServer = await Safe.create({
-          ethAdapter: ethAdapterServer,
-          safeAddress,
+        const city = snapshot.val().city;
+        const senderAddress = snapshot.val().senderAddress;
+
+        // Lookup proper city in firebase
+        const cityRef = ref(db, "wallets/" + senderAddress);
+        let properCity = "";
+        onValue(cityRef, (snapshot) => {
+          properCity = snapshot.val().city;
         });
 
-        const pendingTransactions = (await safeService.getPendingTransactions(safeAddress)).results;
+        console.log("City: " + city);
+        console.log("Proper city: " + properCity);
+        if (city === properCity) {
+          console.log("City is correct!");
+          const safeAddress = snapshot.val().safeAddress;
+          const safeSdkServer = await Safe.create({
+            ethAdapter: ethAdapterServer,
+            safeAddress,
+          });
 
-        const transaction = pendingTransactions[0];
-        const safeTxHash = transaction.safeTxHash;
+          const pendingTransactions = (await safeService.getPendingTransactions(safeAddress)).results;
 
-        const signature = await safeSdkServer.signTransactionHash(safeTxHash);
-        const response = await safeService.confirmTransaction(safeTxHash, signature.data);
-        console.log("Transaction confirmed!");
+          const transaction = pendingTransactions[0];
+          const safeTxHash = transaction.safeTxHash;
 
-        // update in firebase that transaction is confirmed
-        const transactionRef = ref(db, "sendbox/" + snapshot.key);
-        const updates = {
-          confirmed: true,
-        };
-        update(transactionRef, updates);
-        console.log("Transaction confirmed in firebase!");
+          const signature = await safeSdkServer.signTransactionHash(safeTxHash);
+          const response = await safeService.confirmTransaction(safeTxHash, signature.data);
+          console.log("Transaction confirmed!");
+
+          // update in firebase that transaction is confirmed
+          const transactionRef = ref(db, "sendbox/" + snapshot.key);
+          const updates = {
+            confirmed: "true",
+          };
+          update(transactionRef, updates);
+          console.log("Transaction confirmed in firebase!");
+        } else {
+          console.log("City is incorrect!");
+          // update in firebase that transaction is challenged
+          const transactionRef = ref(db, "sendbox/" + snapshot.key);
+          const updates = {
+            confirmed: "challenge",
+          };
+          update(transactionRef, updates);
+          console.log("Transaction challenged in firebase!");
+        }
       }
     }
     confirmTransaction();
