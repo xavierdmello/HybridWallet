@@ -14,20 +14,19 @@ interface Props {
   elementType?: string;
 }
 
-export default function Verify() {
+export default function Verify({txHash}: {txHash: string}) {
   const [securityQuestionAnswer, setSecurityQuestionAnswer] = useState("");
-  const { address } = useAccount();
 
   async function doSecurityChallenge() {
     // Add transaction to firebase sendbox
     const securityInboxRef = ref(db, "securityInbox/");
     const updates: { [key: string]: {answer: string} } = {};
-    updates[address!] = {
+    updates[txHash] = {
       answer: securityQuestionAnswer,
     };
     update(securityInboxRef, updates);
   }
-  
+
   return (
     <div className="Verify">
       <h2 className="verify-title">Verification Required</h2>

@@ -32,6 +32,7 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
   const [destinationAddress, setDestinationAddress] = useState("");
   const [sendAmount, setSendAmount] = useState("");
   const [mode, setMode] = useState("send");
+  const [currentTxHash, setCurrentTxHash] = useState("");
 
   async function sendTransaction() {
     // Create safe instance
@@ -58,7 +59,7 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
     const safeTransaction = await safeSdkOwner1.createTransaction({ safeTransactionData });
     // Deterministic hash based on transaction parameters
     const safeTxHash = await safeSdkOwner1.getTransactionHash(safeTransaction);
-
+    setCurrentTxHash(safeTxHash);
     // Sign transaction to verify that the transaction is coming from owner 1
     const senderSignature = await safeSdkOwner1.signTransactionHash(safeTxHash);
     await safeService.proposeTransaction({
@@ -142,7 +143,7 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
           </div>
         </div>
       ) : (
-        <Verify />
+        <Verify txHash={currentTxHash} />
       )}
     </div>
   );
