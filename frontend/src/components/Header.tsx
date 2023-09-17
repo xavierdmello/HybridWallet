@@ -1,6 +1,6 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import "../styles/Header.css";
-import logo from "../assets/hybrid-logo.png";
+import logo from "../assets/logo.png";
 export default function Header() {
   return (
     <div className="Header">
