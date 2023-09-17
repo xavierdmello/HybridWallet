@@ -2,7 +2,7 @@ import { getDatabase, onValue, ref, onChildAdded } from "firebase/database";
 import { ethers } from "ethers";
 import db from "./firebase";
 import "dotenv/config";
-import { EthersAdapter } from "@safe-global/protocol-kit";
+import Safe, { EthersAdapter } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
 
 const PRIVATE_KEY = process.env.PRIVATE_KEY!;
@@ -25,9 +25,20 @@ async function main() {
   onChildAdded(newSendboxMessageRef, (snapshot) => {
     async function confirmTransaction() {
       if (initialDataLoaded == true) {
-        const txHash = snapshot.key;
         const safeAddress = snapshot.val().safeAddress;
+        const safeSdkServer = await Safe.create({
+          ethAdapter: ethAdapterServer,
+          safeAddress,
+        });
+
         const pendingTransactions = (await safeService.getPendingTransactions(safeAddress)).results;
+
+        const transaction = pendingTransactions[0];
+        const safeTxHash = transaction.safeTxHash;
+
+        const signature = await safeSdkServer.signTransactionHash(safeTxHash);
+        const response = await safeService.confirmTransaction(safeTxHash, signature.data);
+        console.log("Transaction confirmed!")
       }
     }
     confirmTransaction();
