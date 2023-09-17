@@ -1,0 +1,11 @@
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import "../styles/Header.css";
+import logo from "../assets/hybrid-logo.png";
+export default function Header() {
+  return (
+    <div className="Header">
+      <img className="header_logo" src={logo} alt="Hybrid Wallet Logo" />
+      <ConnectButton chainStatus="none" />
+    </div>
+  );
+}

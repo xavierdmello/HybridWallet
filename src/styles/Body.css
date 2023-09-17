@@ -1,0 +1,30 @@
+.Body {
+    margin: 0px 0px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.dotted {
+    text-decoration: underline dotted;
+    -webkit-text-decoration: underline dotted;
+    text-decoration: underline;
+    text-decoration-style: dotted;
+    -webkit-text-decoration-style: dotted'
+}
+
+.body-title {
+    font-weight: 500;
+    margin: 0;
+}
+.body-subheading {
+    font-weight: 100;
+    margin: 0;
+}
+.row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
