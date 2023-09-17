@@ -1,17 +1,72 @@
 import "../styles/Body.css";
-import { Divider, TextField, Button} from "@mui/material";
+import { Divider, TextField, Button } from "@mui/material";
 import { useState } from "react";
-import {useBalance } from "wagmi"
+import { type WalletClient, useBalance, useWalletClient } from "wagmi";
+import { SafeTransactionDataPartial } from "@safe-global/safe-core-sdk-types";
+import { parseEther } from "viem";
+import { ethers, providers } from "ethers";
+import Safe, { EthersAdapter, SafeConfig } from "@safe-global/protocol-kit";
+import SafeApiKit from "@safe-global/api-kit";
 
+export function walletClientToSigner(walletClient: WalletClient) {
+  const { account, chain, transport } = walletClient;
+  const network = {
+    chainId: chain.id,
+    name: chain.name,
+    ensAddress: chain.contracts?.ensRegistry?.address,
+  };
+  const provider = new providers.Web3Provider(transport, network);
+  const signer = provider.getSigner(account.address);
+  return signer;
+}
 
 export default function Body({ walletAddress }: { walletAddress: `0x${string}` }) {
   const { data, isError, isLoading } = useBalance({
     address: walletAddress,
-    watch: true
+    watch: true,
   });
 
-  const [destinationAddress, setDestinationAddress] = useState("")
+  const { data: walletClient } = useWalletClient();
+  const [destinationAddress, setDestinationAddress] = useState("");
   const [sendAmount, setSendAmount] = useState("");
+
+  async function sendTransaction() {
+    // Create safe instance
+    const signer = walletClientToSigner(walletClient!);
+    const ethAdapterOwner1 = new EthersAdapter({
+      ethers,
+      signerOrProvider: signer,
+    });
+    const sc: SafeConfig = {
+      safeAddress: walletAddress,
+      ethAdapter: ethAdapterOwner1,
+    };
+    const safeSdkOwner1 = await Safe.create(sc);
+    const txServiceUrl = "https://safe-transaction-base-testnet.safe.global/";
+    const safeService = new SafeApiKit({ txServiceUrl, ethAdapter: ethAdapterOwner1 });
+
+    // Safe tx data
+    const safeTransactionData: SafeTransactionDataPartial = {
+      to: destinationAddress,
+      data: "0x",
+      value: parseEther(sendAmount).toString(),
+    };
+    // Create a Safe transaction with the provided parameters
+    const safeTransaction = await safeSdkOwner1.createTransaction({ safeTransactionData });
+    // Deterministic hash based on transaction parameters
+    const safeTxHash = await safeSdkOwner1.getTransactionHash(safeTransaction);
+
+    // Sign transaction to verify that the transaction is coming from owner 1
+    const senderSignature = await safeSdkOwner1.signTransactionHash(safeTxHash);
+    await safeService.proposeTransaction({
+      safeAddress: walletAddress,
+      safeTransactionData: safeTransaction.data,
+      safeTxHash,
+      senderAddress: await signer.getAddress(),
+      senderSignature: senderSignature.data,
+    });
+  }
+
   return (
     <div className="Body">
       <div className="row">
