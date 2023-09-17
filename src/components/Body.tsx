@@ -1,9 +1,22 @@
 import "../styles/Body.css";
-export default function Body() {
+import { Divider } from "@mui/material";
+import {useBalance } from "wagmi"
+
+export default function Body({ walletAddress }: { walletAddress: `0x${string}` }) {
+  const { data, isError, isLoading } = useBalance({
+    address: walletAddress,
+    watch: true
+  });
   return (
     <div className="Body">
-      <h2 className="body-title">Create Hybrid Wallet</h2>
-      <p className="body-subheading">Lorem ipsum dolor sit amet consectetur adipisicing elit. Dolorem sunt culpa labore perferendis? Repudiandae ipsum dolorem earum nulla, voluptates assumenda, nisi molestiae modi ad deserunt sequi quo aperiam unde laboriosam!</p>
+      <div className="row">
+        <h2 className="body-title">
+          Smart Balance: {data?.formatted} {data?.symbol}
+        </h2>
+        <p className="body-subheading">{walletAddress}</p>
+      </div>
+
+      <Divider />
     </div>
   );
 }

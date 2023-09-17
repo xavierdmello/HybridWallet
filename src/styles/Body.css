@@ -17,14 +17,15 @@
 .body-title {
     font-weight: 500;
     margin: 0;
+    
 }
 .body-subheading {
     font-weight: 100;
     margin: 0;
+  
 }
 .row {
     display: flex;
-    flex-direction: row;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
 }

@@ -38,7 +38,15 @@ function App() {
 
       <Divider />
 
-      {isConnected ? hybridWalletAddress !== "" ? <Body />: <Create onCreate={setHybridWalletAddress}/>  : <p className="connect-wallet-warning">Please connect your wallet.</p>}
+      {isConnected ? (
+        hybridWalletAddress !== "" ? (
+          <Body walletAddress={hybridWalletAddress as `0x${string}`} />
+        ) : (
+          <Create onCreate={setHybridWalletAddress} />
+        )
+      ) : (
+        <p className="connect-wallet-warning">Please connect your wallet.</p>
+      )}
     </div>
   );
 }
