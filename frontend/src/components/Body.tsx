@@ -124,7 +124,7 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
       ></TextField>
 
       <div className="send-row">
-        <TextField className="send-amount-input" label="Value (ETH)" onChange={(e) => setSendAmount(e.target.value)}></TextField>
+        <TextField className="send-amount-input" type="number" label="Value (ETH)" onChange={(e) => setSendAmount(e.target.value)}></TextField>
 
         <Button className="send-button" size="medium" variant="outlined" onClick={sendTransaction}>
           Send ETH
