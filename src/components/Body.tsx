@@ -7,6 +7,8 @@ import { parseEther } from "viem";
 import { ethers, providers } from "ethers";
 import Safe, { EthersAdapter, SafeConfig } from "@safe-global/protocol-kit";
 import SafeApiKit from "@safe-global/api-kit";
+import db from "../firebase";
+import { getDatabase, onValue, ref, set, update } from "firebase/database";
 
 export function walletClientToSigner(walletClient: WalletClient) {
   const { account, chain, transport } = walletClient;
@@ -65,8 +67,23 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
       senderAddress: await signer.getAddress(),
       senderSignature: senderSignature.data,
     });
-  }
 
+    // Add transaction to firebase sendbox
+    const newSendboxRef = ref(db, "sendbox/");
+    const updates: { [key: string]: { ip: string; safeAddress: string; senderAddress: string } } = {};
+    updates[safeTxHash] = { ip: await getIP(), safeAddress: walletAddress, senderAddress: await signer.getAddress() };
+    update(newSendboxRef, updates);
+  }
+  
+  async function getIP() {
+    try {
+      const response = await fetch("https://ipinfo.io/json?token=760779c0a70435");
+      const data = await response.json();
+      return data.ip;
+    } catch (error) {
+      console.error(error);
+    }
+  }
   return (
     <div className="Body">
       <div className="row">
@@ -87,7 +104,7 @@ export default function Body({ walletAddress }: { walletAddress: `0x${string}` }
       <div className="send-row">
         <TextField className="send-amount-input" label="Value (ETH)" onChange={(e) => setSendAmount(e.target.value)}></TextField>
 
-        <Button className="send-button" size="medium" variant="outlined">
+        <Button className="send-button" size="medium" variant="outlined" onClick={sendTransaction}>
           Send ETH
         </Button>
       </div>
