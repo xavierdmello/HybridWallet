@@ -53,7 +53,7 @@ export default function Create({onCreate}: {onCreate: (arg0: string) => void}) {
     <div className="Create">
       <h2 className="create-title">Create Hybrid Wallet</h2>
       <p className="create-subheading">You don't have a hybrid wallet yet - create one!</p>
-      <Button className="create-wallet-button" size="medium" variant="outlined" onClick={createWallet}>
+      <Button className="button" size="medium" variant="outlined" onClick={createWallet}>
         Create Wallet
       </Button>
     </div>

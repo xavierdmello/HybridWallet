@@ -29,3 +29,20 @@
     flex-direction: column;
     align-items: center;
 }
+
+.send-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+.send-amount-input {
+    width: 100%;
+}
+
+.send-button {
+    white-space: nowrap;
+    height: 55px;
+}
